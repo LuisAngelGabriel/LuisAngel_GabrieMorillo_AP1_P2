@@ -1,5 +1,76 @@
-﻿<h3>Index</h3>
+﻿@page "/Index/"
+@using System.Globalization
 
-@code {
 
-}
+<PageTitle>Consulta de .....</PageTitle>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header text-center">
+            <h5 class="mb-0">Consulta de .....</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Filtrar por</label>
+                    <select class="form-select">
+                        <option selected>Elija una opción</option>
+                        <option>Id</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Búsqueda</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" placeholder="Buscar" />
+                        <button class="btn btn-outline-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Desde</label>
+                    <input type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <input type="date" class="form-control" />
+                </div>
+
+                <div class="col-md-2 text-end">
+                    <label class="d-block invisible">.</label>
+                    <a href="/Registro/Create" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-1"></i> Crear
+                    </a>
+                </div>
+            </div>
+
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Id</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">Conteo</label>
+                    <input type="text" class="form-control" value="0" readonly />
+                </div>
+                <div class="col-md-6 text-end">
+                    <label class="fw-bold">Total</label>
+                    <input type="text" class="form-control text-end" value="0.00" readonly />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
