@@ -19,7 +19,7 @@ namespace LuisAngel_GabrieMorillo_AP1_P2.Models
         public int IdProducido { get; set; }
 
         public Productos? Producido { get; set; }
-        public int CantidadProducida { get; set; }
+        public decimal CantidadProducida { get; set; }
 
         public List<EntradasDetalle> Detalles { get; set; } = new List<EntradasDetalle>();
 
