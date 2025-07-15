@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
 {
     [DbContext(typeof(Contexto))]
-    [Migration("20250715005228_Inicial")]
-    partial class Inicial
+    [Migration("20250715102804_InicialConProductos")]
+    partial class InicialConProductos
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -33,8 +33,8 @@ namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EntradaId"));
 
-                    b.Property<int>("CantidadProducida")
-                        .HasColumnType("int");
+                    b.Property<decimal>("CantidadProducida")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Concepto")
                         .IsRequired()
@@ -109,6 +109,56 @@ namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
                     b.HasKey("ProductoId");
 
                     b.ToTable("Productos");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductoId = 1,
+                            Descripcion = "Maní",
+                            EsCompuesto = false,
+                            Existencia = 100.0,
+                            Peso = 0.0
+                        },
+                        new
+                        {
+                            ProductoId = 2,
+                            Descripcion = "Pistachos",
+                            EsCompuesto = false,
+                            Existencia = 100.0,
+                            Peso = 0.0
+                        },
+                        new
+                        {
+                            ProductoId = 3,
+                            Descripcion = "Almendras",
+                            EsCompuesto = false,
+                            Existencia = 100.0,
+                            Peso = 0.0
+                        },
+                        new
+                        {
+                            ProductoId = 4,
+                            Descripcion = "Frutos Mixtos 200gr",
+                            EsCompuesto = true,
+                            Existencia = 0.0,
+                            Peso = 200.0
+                        },
+                        new
+                        {
+                            ProductoId = 5,
+                            Descripcion = "Frutos Mixtos 400gr",
+                            EsCompuesto = true,
+                            Existencia = 0.0,
+                            Peso = 400.0
+                        },
+                        new
+                        {
+                            ProductoId = 6,
+                            Descripcion = "Frutos Mixtos 600gr",
+                            EsCompuesto = true,
+                            Existencia = 0.0,
+                            Peso = 600.0
+                        });
                 });
 
             modelBuilder.Entity("LuisAngel_GabrieMorillo_AP1_P2.Models.Entradas", b =>

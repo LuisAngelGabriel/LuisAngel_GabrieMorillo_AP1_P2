@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class InicialConProductos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,7 +40,7 @@ namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
                     PesoTotal = table.Column<double>(type: "float", nullable: false),
                     IdProducido = table.Column<int>(type: "int", nullable: false),
                     ProducidoProductoId = table.Column<int>(type: "int", nullable: true),
-                    CantidadProducida = table.Column<int>(type: "int", nullable: false)
+                    CantidadProducida = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -75,6 +77,19 @@ namespace LuisAngel_GabrieMorillo_AP1_P2.Migrations
                         principalTable: "Productos",
                         principalColumn: "ProductoId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Productos",
+                columns: new[] { "ProductoId", "Descripcion", "EsCompuesto", "Existencia", "Peso" },
+                values: new object[,]
+                {
+                    { 1, "Maní", false, 100.0, 0.0 },
+                    { 2, "Pistachos", false, 100.0, 0.0 },
+                    { 3, "Almendras", false, 100.0, 0.0 },
+                    { 4, "Frutos Mixtos 200gr", true, 0.0, 200.0 },
+                    { 5, "Frutos Mixtos 400gr", true, 0.0, 400.0 },
+                    { 6, "Frutos Mixtos 600gr", true, 0.0, 600.0 }
                 });
 
             migrationBuilder.CreateIndex(
