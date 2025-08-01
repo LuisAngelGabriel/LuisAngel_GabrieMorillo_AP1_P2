@@ -1,0 +1,191 @@
+﻿@page "/Productos/Create"
+@using Blazored.Toast.Services
+@using LuisAngel_GabrieMorillo_AP1_P2.Models
+@using LuisAngel_GabrieMorillo_AP1_P2.Services
+@inject EntradasService EntradasService
+@inject NavigationManager Navigator
+@inject IToastService Toast
+@rendermode InteractiveServer
+
+<PageTitle>Agregar Nueva Entrada</PageTitle>
+
+<EditForm Model="@Registro" OnValidSubmit="@ProcesarGuardado">
+    <DataAnnotationsValidator />
+    <div class="container mt-4">
+        <div class="card border-success shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Entrada Nueva</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label>Fecha</label>
+                        <InputDate class="form-control" @bind-Value="Registro.Fecha" />
+                    </div>
+                    <div class="col-md-6">
+                        <label>Concepto</label>
+                        <InputText class="form-control" @bind-Value="Registro.Concepto" />
+                    </div>
+                    <div class="col-md-3">
+                        <label>Peso Total (kg)</label>
+                        <InputNumber class="form-control" @bind-Value="Registro.PesoTotal" step="0.01" />
+                    </div>
+                </div>
+
+                <hr />
+                <h6>Agregar Productos</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <InputSelect class="form-select" @bind-Value="productoIdSeleccionado">
+                            <option value="0">-- Selecciona un producto --</option>
+                            @foreach (var p in ListaProductos)
+                            {
+                                <option value="@p.ProductoId">@p.Descripcion</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-3">
+                        <InputNumber class="form-control" @bind-Value="cantidadAgregar" placeholder="Cantidad" />
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-success" @onclick="AgregarDetalle">Añadir</button>
+                    </div>
+                </div>
+
+                @if (Registro.Detalles.Count > 0)
+                {
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Registro.Detalles)
+                            {
+                                var prod = ListaProductos.FirstOrDefault(x => x.ProductoId == d.ProductoId);
+                                <tr>
+                                    <td>@prod?.Descripcion</td>
+                                    <td>@d.Cantidad</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => QuitarDetalle(d)">X</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">No hay productos agregados aún.</p>
+                }
+            </div>
+
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-success">Registrar</button>
+                <a class="btn btn-secondary" href="/Productos/Index">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private Entradas Registro { get; set; } = new();
+    private List<Productos> ListaProductos = new();
+    private int productoIdSeleccionado = 0;
+    private int cantidadAgregar = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaProductos = await EntradasService.ListarProductos();
+        Registro.Fecha = DateTime.UtcNow;
+    }
+
+    private async Task ProcesarGuardado()
+    {
+        if (string.IsNullOrWhiteSpace(Registro.Concepto))
+        {
+            Toast.ShowWarning("Debe proporcionar un concepto válido.");
+            return;
+        }
+
+        if (!Registro.Detalles.Any())
+        {
+            Toast.ShowWarning("Agregue al menos un producto a la entrada.");
+            return;
+        }
+
+        if (Registro.PesoTotal <= 0)
+        {
+            Toast.ShowWarning("Debe ingresar un peso total válido.");
+            return;
+        }
+
+        Registro.CantidadProducida = (decimal)Registro.PesoTotal;
+
+        var compuesto = ListaProductos.FirstOrDefault(p => p.EsCompuesto);
+        if (compuesto != null)
+        {
+            Registro.IdProducido = compuesto.ProductoId;
+            Registro.Producido = compuesto;
+        }
+
+        foreach (var detalle in Registro.Detalles)
+        {
+            detalle.Producto = ListaProductos.FirstOrDefault(p => p.ProductoId == detalle.ProductoId);
+        }
+
+        var exito = await EntradasService.Guardar(Registro);
+
+        if (exito)
+        {
+            Toast.ShowSuccess("Entrada registrada correctamente.");
+            Navigator.NavigateTo("/Productos/Index", forceLoad: true);
+        }
+        else
+        {
+            Toast.ShowError("No se pudo completar el registro. Intente más tarde.");
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        if (productoIdSeleccionado == 0)
+        {
+            Toast.ShowInfo("Selecciona un producto antes de continuar.");
+            return;
+        }
+
+        if (cantidadAgregar <= 0)
+        {
+            Toast.ShowInfo("La cantidad debe ser mayor que cero.");
+            return;
+        }
+
+        if (Registro.Detalles.Any(x => x.ProductoId == productoIdSeleccionado))
+        {
+            Toast.ShowWarning("Ese producto ya fue incluido.");
+            return;
+        }
+
+        Registro.Detalles.Add(new EntradasDetalle
+        {
+            ProductoId = productoIdSeleccionado,
+            Cantidad = cantidadAgregar,
+            Producto = ListaProductos.FirstOrDefault(p => p.ProductoId == productoIdSeleccionado)
+        });
+
+        productoIdSeleccionado = 0;
+        cantidadAgregar = 1;
+    }
+
+    private void QuitarDetalle(EntradasDetalle detalle)
+    {
+        if (Registro.Detalles.Contains(detalle))
+        {
+            Registro.Detalles.Remove(detalle);
+        }
+    }
+}

@@ -1,0 +1,238 @@
+﻿@page "/Productos/Edit/{EntradaId:int}"
+@using Blazored.Toast.Services
+@using LuisAngel_GabrieMorillo_AP1_P2.Models
+@using LuisAngel_GabrieMorillo_AP1_P2.Services
+@inject EntradasService EntradasService
+@inject NavigationManager Navigator
+@inject IToastService Toast
+@rendermode InteractiveServer
+
+<PageTitle>Editar Entrada</PageTitle>
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header text-center bg-success text-white">
+            <h5 class="mb-0">Editar Entrada</h5>
+        </div>
+
+        <div class="card-body">
+            <EditForm Model="@Registro" OnValidSubmit="@GuardarCambios">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label>Fecha</label>
+                        <InputDate class="form-control" @bind-Value="Registro.Fecha" />
+                    </div>
+                    <div class="col-md-4">
+                        <label>Concepto</label>
+                        <InputText class="form-control" @bind-Value="Registro.Concepto" />
+                    </div>
+                    <div class="col-md-4">
+                        <label>Peso Total (kg)</label>
+                        <InputNumber class="form-control" @bind-Value="Registro.PesoTotal" step="0.01" />
+                    </div>
+                </div>
+
+                <hr />
+
+                <h6>Productos en la Entrada</h6>
+                @if (Registro.Detalles?.Count > 0)
+                {
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Quitar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Registro.Detalles)
+                            {
+                                var prod = ListaProductos.FirstOrDefault(p => p.ProductoId == d.ProductoId);
+                                <tr>
+                                    <td>@prod?.Descripcion</td>
+                                    <td>
+                                        <InputNumber class="form-control" @bind-Value="d.Cantidad" step="0.01" />
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => QuitarDetalle(d)">
+                                            X
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p>No hay productos agregados.</p>
+                }
+
+                <hr />
+                <h6>Agregar Producto</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <InputSelect class="form-select" @bind-Value="productoIdSeleccionado">
+                            <option value="0">-- Seleccione un producto --</option>
+                            @foreach (var p in ListaProductos)
+                            {
+                                <option value="@p.ProductoId">@p.Descripcion</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="col-md-3">
+                        <InputNumber class="form-control" @bind-Value="cantidadAgregar" placeholder="Cantidad" step="0.01" />
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="button" class="btn btn-outline-success" @onclick="AgregarDetalle">
+                            Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-secondary me-2" @onclick="Volver">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </button>
+                    <button type="button" class="btn btn-danger me-2" @onclick="MostrarConfirmacionEliminar">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@if (mostrarModalEliminar)
+{
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar Entrada</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro que deseas eliminar esta entrada?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Volver</button>
+                    <button type="button" class="btn btn-danger" @onclick="EliminarEntrada">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    private Entradas Registro = new();
+    private List<Productos> ListaProductos = new();
+
+    private bool mostrarModalEliminar = false;
+    private int productoIdSeleccionado = 0;
+    private double cantidadAgregar = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (EntradaId > 0)
+        {
+            var entradaDb = await EntradasService.Buscar(EntradaId);
+            if (entradaDb != null)
+                Registro = entradaDb;
+        }
+
+        ListaProductos = await EntradasService.ListarProductos();
+    }
+
+    private void MostrarConfirmacionEliminar()
+    {
+        mostrarModalEliminar = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModalEliminar = false;
+    }
+
+    private async Task EliminarEntrada()
+    {
+        var eliminado = await EntradasService.Eliminar(EntradaId);
+        if (eliminado)
+        {
+            Toast.ShowSuccess("Entrada eliminada correctamente.");
+            Navigator.NavigateTo("/Productos/Index");
+        }
+        else
+        {
+            Toast.ShowError("Error al eliminar la entrada.");
+        }
+    }
+
+    private void Volver()
+    {
+        Navigator.NavigateTo("/Productos/Index");
+    }
+
+    private async Task GuardarCambios()
+    {
+        var exito = await EntradasService.Guardar(Registro);
+        if (exito)
+        {
+            Toast.ShowSuccess("Entrada guardada correctamente.");
+            Navigator.NavigateTo("/Productos/Index");
+        }
+        else
+        {
+            Toast.ShowError("Error al guardar la entrada.");
+        }
+    }
+
+    private void AgregarDetalle()
+    {
+        if (productoIdSeleccionado == 0)
+        {
+            Toast.ShowInfo("Selecciona un producto antes de continuar.");
+            return;
+        }
+
+        if (cantidadAgregar <= 0)
+        {
+            Toast.ShowInfo("La cantidad debe ser mayor que cero.");
+            return;
+        }
+
+        if (Registro.Detalles.Any(x => x.ProductoId == productoIdSeleccionado))
+        {
+            Toast.ShowWarning("Ese producto ya fue agregado.");
+            return;
+        }
+
+        Registro.Detalles.Add(new EntradasDetalle
+        {
+            ProductoId = productoIdSeleccionado,
+            Cantidad = cantidadAgregar,
+            Producto = ListaProductos.FirstOrDefault(p => p.ProductoId == productoIdSeleccionado)
+        });
+
+        productoIdSeleccionado = 0;
+        cantidadAgregar = 1;
+    }
+
+    private void QuitarDetalle(EntradasDetalle detalle)
+    {
+        if (Registro.Detalles.Contains(detalle))
+        {
+            Registro.Detalles.Remove(detalle);
+        }
+    }
+}
